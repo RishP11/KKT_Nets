@@ -10,3 +10,7 @@ __KKTNets__: A Deep Learning Approach to Convex Optimization via Lagrange Dualit
     - Doing so may provide us a better starting point when trying to solve a optimization problem using iterative methods. 
     - Can we learn more ${\color{blue}{organic}}$ solutions?
     - A dive into visualization of the optimization problem.
+    - Anything else?
+
+- What did we find?
+    - Update this...
