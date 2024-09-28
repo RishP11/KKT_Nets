@@ -1,5 +1,8 @@
 __KKTNets__: A Deep Learning Approach to Convex Optimization via Lagrange Duality
 
+Authors: 
+1. Rishabh Sharad Pomaje 
+
 - In this paper we explore the possibility of solving Convex Optimization problems by using Deep Learning to try and possibly learn the optimal variables, Lagrange multipliers and dual variables.
 
 - Why Deep Learning?
