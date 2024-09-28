@@ -4,4 +4,9 @@ __KKTNets__: A Deep Learning Approach to Convex Optimization via Lagrange Dualit
 
 - Why Deep Learning?
     - They have been shown to be Universal Function Approximators.
-    - We try and see if they can be used to find atleast $\epsilon$-suboptimal solutions.
+    
+- What are we trying to achieve?
+    - We try and see if they can be used to find $\epsilon$-suboptimal solutions or even better, the actual optimal points. 
+    - Doing so may provide us a better starting point when trying to solve a optimization problem using iterative methods. 
+    - Can we learn more ${\color{blue}{organic}}$ solutions?
+    - A dive into visualization of the optimization problem.
