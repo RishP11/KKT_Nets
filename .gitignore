@@ -1,2 +1,2 @@
-/QP/dataset/
-/QP/__pycache__/
+QP/__pycache__/
+*.ipynb
