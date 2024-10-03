@@ -72,23 +72,18 @@ def QPdataSetGen(file_path, set_size=1, dim_x=2, numIneq=1, numEq=1):
 
         # Instantiation of the problem
         x = cp.Variable(dim_x)
-
         objFnc = cp.Minimize((1 / 2) * cp.quad_form(x, P) + q.T @ x)
-
-        constFncs = [G @ x <= h]
-        if numEq > 0:
-            constFncs.append(A @ x == b)
-
-        prob = cp.Problem(objFnc, constFncs)
+        constrFncs = [G @ x <= h, A @ x == b]
+        
+        prob = cp.Problem(objFnc, constrFncs)
         count_explored += 1 
         try:
             prob.solve()    
             # If the problem is solvable, store the data
             if prob.status == cp.OPTIMAL:
                 x_opt = np.array(x.value)
-                p_opt = prob.value
-                lambda_opt = np.array(prob.constraints[0].value)
-                nu_opt = np.array(prob.constraints[1].value) if numEq > 0 else None
+                lambda_opt = np.array(constrFncs[0].dual_value)
+                nu_opt = np.array(constrFncs[1].dual_value) 
                 # Store the problem data and solution
                 P_set.append(P)
                 q_set.append(q)
