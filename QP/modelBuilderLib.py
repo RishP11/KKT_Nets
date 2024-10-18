@@ -1,6 +1,7 @@
 import tensorflow as tf 
 import numpy as np 
 
+
 def QP_nn_(tf.keras.Model):
     def __init__(self, dim_x, num_Eq, num_Ineq):
         super(QP_nn, self).__init__()

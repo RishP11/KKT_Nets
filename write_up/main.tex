@@ -30,7 +30,7 @@
 
 
 
-\title{KKT Nets: A Physics-Inspired Neural Network approach to solving convex optimization problems}
+\title{KKT Nets: A KKT conditions-Informed Neural Network approach to solving convex optimization problems}
 
 % Authors must not appear in the submitted version. They should be hidden
 % as long as the \iclrfinalcopy macro remains commented out below.
@@ -40,20 +40,7 @@
 Department of Electrical Engineering\\
 Indian Institute Of Technology Dharwad,\\
 India.\\
-\texttt{\href{mailto:210020036@iitdh.ac.in}{210020036@iitdh.ac.in}} \\
-\And
-Rajshekhar V. Bhat\\
-Department of Electrical Engineering \\
-Indian Institute of Technology Dharwad, 
-India.\\
-\texttt{\href{mailto:rajshekhar.bhat@iitdh.ac.in}{rajshekhar.bhat@iitdh.ac.in}} \\
-\AND
-Coauthor \\
-Affiliation \\
-Address \\
-\texttt{email}
-}
-
+\texttt{\href{mailto:210020036@iitdh.ac.in}{210020036@iitdh.ac.in}}}
 % The \author macro works with any number of authors. There are two commands
 % used to separate the names and addresses of multiple authors: \And and \AND.
 %
@@ -75,41 +62,74 @@ Address \\
 \end{abstract}
 
 \section{Introduction}
-The general form of a convex optimization problem, \cite{Boyd_Vandenberghe_2004}, is expressed as:
-\begin{subequations}
-\begin{align}
-\min_{\vx \in \mathbb{R}^n} \quad & f_0(\vx) \\
-\text{subject to} \quad & f_i(\vx)  \leq 0, \quad i = 1, \ldots, m \\
-& g_i(\vx) = 0, \quad i = 1, \ldots, p
-\end{align}
+
+\subsection{Optimization: General form and some definitions}
+Optimization problems are ubiquitous and appear in almost all disciplines ranging from science, finance, logistics, and economics. Thus, finding a more efficient algorithm to this fundamental task is beneficial. An optimization problem is of the form, \cite{Boyd_Vandenberghe_2004}, 
+\begin{subequations}\label{eq:genOptProb}
+    \begin{align}
+        \min_{\vx \in \mathcal{D}}\quad &f_0(\vx) \\
+        \text{subject to}\quad &f_i(\vx) \leq 0 \quad ,i = 1, 2, \dots, m. \\
+        \quad &h_i(\vx) = 0 \quad ,i = 1, 2, \dots, p.  
+    \end{align}
 \end{subequations}
-where $f_i: \mathbb{R}^n \rightarrow \mathbb{R}$ are convex functions and  $g_i: \mathbb{R}^n \rightarrow \mathbb{R}$ are affine. The domain of the above problem is defined as 
+where, $f_0:\mathbb{R}^n\rightarrow\mathbb{R}$ is called the objective function, with $\vx \in \mathbb{R}^n$ being the objective variable. The functions $f_i:\mathbb{R}^n \rightarrow \mathbb{R}$ are called the inequality constraint functions and $h_i:\mathbb{R}^n \rightarrow \mathbb{R}$ are the equality constraint functions. $\mathcal{D}$ denotes the domain of the problem and is defined as 
 \begin{align}
-   \mathcal{D} = \bigcap_{i=0}^{m} \text{\textbf{dom}}f_i\ \cap\ \bigcap_{i=1}^{p} \text{\textbf{dom}}g_i\ 
+   \mathcal{D} = \bigcap_{i=0}^{m} \text{\textbf{dom}}f_i\ \cap\ \bigcap_{i=1}^{p} \text{\textbf{dom}}g_i. \label{eq:ProbDomain}
 \end{align}
 
-A dual formulation of the above optimization problem is made using \emph{Lagrange's Dual Function and Multipliers}. Let $\lambda \in \mathbb{R}^m$ and $\nu \in \mathbb{R}^p$. 
+An optimization problem is called a convex program if the following hold:
+\begin{enumerate}
+    \item $f_i, i = 0, 2, \dots, m$ are convex functions of $\vx$.
+    \item $h_i, i = 1, 2, \dots, p$ are affine functions of $\vx$, i.e., $h_i(\vx) = \va_i^T \vx + b$.
+\end{enumerate}
 
-The \emph{Lagrangian} $\mathcal{L}: \mathbb{R}^n \times \mathbb{R}^m \times \mathbb{R}^p \rightarrow \mathbb{R}$ is defined as, 
-\begin{align}
-   \mathcal{L}(\vx, \lambda, \nu) = f_0(\vx) + \sum_{i=1}^{m} \lambda_i f_i(\vx) + \sum_{i=1}^{p} \nu_i g_i(\vx).
-\end{align} 
-The \emph{Lagrange Dual function} (LDF) is given as,
-\begin{align}
-   g(\lambda, \nu) = \inf_{\vx \in \mathcal{D}} \mathcal{L}(\vx, \lambda, \nu)
-\end{align}
+There are several standard forms of convex program depending on the nature of the objective and the constraint functions. 
 
-Note that by definition the LDF is a pointwise infinimum of affine functions of $\lambda$ and $\nu$. Thus, the LDF is always a convex function regardless of the nature of the objective and constraint functions.  
+\subsection{A few standard convex programs}
+    \subsubsection{Linear Program (LP)}
+        \begin{subequations}\label{eq:LP}
+            \begin{align}
+                \min_{\vx} \quad &\vc^T\vx + d \\
+                \text{subject to} \quad &\mG\vx \preceq \vh \\
+                \quad &\mA\vx = \vb
+            \end{align}
+        \end{subequations}
+        where, $\mG \in \mathbb{R}^{m \times n}$ and $\mA \in \mathbb{R}^{p \times n}$.
+    Several practical examples of LPs can be found in,\cite{Boyd_Vandenberghe_2004}.
 
-Suppose \( \lambda_i \) are the dual variables associated with the inequality constraints \( f_i(x) \) for \( i \in \{1,2,\ldots,m\} \), and \( \nu_i \) are the dual variables associated with the equality constraints \( g_i(x) \) for \( i \in \{1,2,\ldots,p\} \). Under some regularity conditions, the following Karush-Kuhn-Tucker (KKT) conditions provide necessary and sufficient conditions for optimality in such problems:
-\begin{align}
-&\text{Primal feasibility: } f_i(x^*) \leq 0, \quad g_i(x^*) = 0, \\
-&\text{Dual feasibility: } \lambda_i^* \geq 0, \\
-&\text{Complementary slackness: } \lambda_i^* f_i(x^*) = 0, \\
-&\text{Stationarity: } \nabla f_0(x^*) + \sum_{i=1}^{M} \lambda_i^* \nabla f_i(x^*) + \sum_{i=1}^{K} \nu_i^* \nabla g_i(x^*) = 0,
-\end{align}
- 
-In this article, we focus on training a deep learning model to take problem parameters for specific subclasses of convex optimization problems, such as linear or quadratic programs with up to a maximum \( n \), and output the optimal primal variable \( x^* \) and dual variables \( \{ \lambda_i^* \}_{i=1}^M \) and \( \{ \nu_i^* \}_{i=1}^K \).  We propose an architecture that embeds the KKT conditions for optimality into the neural network and defines loss functions accordingly. We refer to these networks as KKT Networks.
+    \subsubsection{Quadratic Program}
+        \begin{subequations}\label{eq:QP}
+            \begin{align}
+            \min_{\vx \in \mathbb{R}^n} \quad &\frac{1}{2}{\vx}^T \mP \vx + \vq^T \vx + r \\ 
+            \text{subject to} \quad & \mG\vx \preceq \vh  \\
+            & \mA\vx = \vb
+            \end{align}                
+        \end{subequations}
+    
+    \subsubsection{Other standard problems}
+    There are other standard problems that categorize themselves under convex optimization such as Quadratic Programming Quadratic Constraints (QCQP), Second Order Cone Programming (SOCP), etc. We consider them as future work.
+
+    \subsection{Dual Problems: Lagrange Dual Problems and few more definitions}
+    Let $\lambda \in \mathbb{R}^m$ and $\nu \in \mathbb{R}^p$. The \emph{Lagrangian} $\mathcal{L}: \mathbb{R}^n \times \mathbb{R}^m \times \mathbb{R}^p \rightarrow \mathbb{R}$ is defined as, 
+    \begin{align}
+    \mathcal{L}(\vx, \lambda, \nu) = f_0(\vx) + \sum_{i=1}^{m} \lambda_i f_i(\vx) + \sum_{i=1}^{p} \nu_i g_i(\vx).
+    \end{align} 
+    The \emph{Lagrange Dual function} (LDF) is given as,
+    \begin{align}
+    g(\lambda, \nu) = \inf_{\vx \in \mathcal{D}} \mathcal{L}(\vx, \lambda, \nu)
+    \end{align}
+
+    Note that by definition the LDF is a pointwise infinimum of affine functions of $\lambda$ and $\nu$. Thus, the LDF is always a convex function regardless of the nature of the objective and constraint functions.  
+
+    Suppose \( \lambda_i \) are the dual variables associated with the inequality constraints \( f_i(x) \) for \( i \in \{1,2,\ldots,m\} \), and \( \nu_i \) are the dual variables associated with the equality constraints \( g_i(x) \) for \( i \in \{1,2,\ldots,p\} \). Under some regularity conditions, the following Karush-Kuhn-Tucker (KKT) conditions provide necessary and sufficient conditions for optimality in such problems:
+    \begin{align}
+    &\text{Primal feasibility: } f_i(x^*) \leq 0, \quad g_i(x^*) = 0, \\
+    &\text{Dual feasibility: } \lambda_i^* \geq 0, \\
+    &\text{Complementary slackness: } \lambda_i^* f_i(x^*) = 0, \\
+    &\text{Stationarity: } \nabla f_0(x^*) + \sum_{i=1}^{M} \lambda_i^* \nabla f_i(x^*) + \sum_{i=1}^{K} \nu_i^* \nabla g_i(x^*) = 0,
+    \end{align}
+    
+    In this article, we focus on training a deep learning model to take problem parameters for specific subclasses of convex optimization problems, such as linear or quadratic programs with up to a maximum \( n \), and output the optimal primal variable \( x^* \) and dual variables \( \{ \lambda_i^* \}_{i=1}^M \) and \( \{ \nu_i^* \}_{i=1}^K \).  We propose an architecture that embeds the KKT conditions for optimality into the neural network and defines loss functions accordingly. We refer to these networks as KKT Networks.
 
 \section{Neural Network Approach to Solving KKT Conditions}
 
@@ -124,72 +144,47 @@ where:
 \text{Stationarity Loss} &= \frac{1}{N} \left\| \nabla f_0(x) + \sum_{i=1}^{M} \lambda_i \nabla f_i(x) + \sum_{i=1}^{K} \nu_i \nabla g_i(x) \right\|^2
 \end{align}
 
-
-\section{Examples of standard forms of programming}
-\subsection{Linear Programming}
-Standard form of Linear Program:
-\begin{subequations}
-   \begin{align}
-      \min_{\vx \in \mathbb{R}^n} \quad & \vc^T \vx \\
-      \text{subject to} \quad & \mG\vx \preceq \vh \\
-      & \mA\vx = \vb
-      \end{align}
-\end{subequations}
-
-\subsection{Quadratic Programming}
-Standard form for Quadratic Programming:
-\begin{subequations}
-   \begin{align}
-      \min_{\vx \in \mathbb{R}^n} \quad &\frac{1}{2}{\vx}^T \mP \vx + \vq^T \vx + r \\ 
-      \text{subject to} \quad & \mG\vx \preceq \vh  \\
-      & \mA\vx = \vb
-   \end{align}
-\end{subequations}
-
-\subsection{Other standard problems}
-There are other standard problems that categorize themselves under convex optimization such as Quadratic Programming Quadratic Constraints (QCQP), Second Order Cone Programming (SOCP), etc. We consider them as future work.
-
 \section{System Methodology}
 
-\subsection{Data Set Generation}
-There are two classes of optimization problems. One where there is no explicit formulation and instead we access the objective and constraint functions which are modelled as a black box. We can \emph{query} this black box and get the value of the objective, or derivative of the objective and so on at any point. However, we do not have the closed form expression of any function involved. Such a formulation style is called \emph{Oracle problem description}. We will not address these type of problems in this work and consider it as future work.
+    \subsection{Data Set Generation}
+    There are two classes of optimization problems. One where there is no explicit formulation and instead we access the objective and constraint functions which are modelled as a black box. We can \emph{query} this black box and get the value of the objective, or derivative of the objective and so on at any point. However, we do not have the closed form expression of any function involved. Such a formulation style is called \emph{Oracle problem description}. We will not address these type of problems in this work and consider it as future work.
 
-In other cases where optimization problems which can be expressed in explicit, closed-form expressions are called \emph{parameterized problems}. 
+    In other cases where optimization problems which can be expressed in explicit, closed-form expressions are called \emph{parameterized problems}. 
 
-For training a neural network, it is imperative that we require labelled data. We can artificially generate the required data, consisting of parameters of a problem instance and the corresponding solution. To achieve this, we can use random number generators to populate the parameters of any optimization problem. Furthermore to find the optimal primal and dual solutions, one can use any one of the numerous solvers available. Specifically for our data, we used the CVXPY python module coupled with OSQP solver. 
+    For training a neural network, it is imperative that we require labelled data. We can artificially generate the required data, consisting of parameters of a problem instance and the corresponding solution. To achieve this, we can use random number generators to populate the parameters of any optimization problem. Furthermore to find the optimal primal and dual solutions, one can use any one of the numerous solvers available. Specifically for our data, we used the CVXPY python module coupled with OSQP solver. 
 
-For instance, the standard form of a QP is as follows:
-\begin{subequations}
-   \begin{align}
-      \min_{\vx} \quad &\frac{1}{2}\vx^T \mP \vx + \vq^T \vx + r \\
-      \text{subject to} \quad &\mG \vx \preceq \vh \\
-      \quad &\mA \vx = \vb  
-   \end{align}
-\end{subequations}
-where, \[\mP \in \mathbb{R}^{n \times n}, \vq \in \mathbb{R}^{n}, r \in \mathbb{R}, \mG \in \mathbb{R}^{m \times n}, \vh \in \mathbb{R}^{m}, \mA \in \mathbb{R}^{p \times n}, \vb \in \mathbb{R}^{p}.\]
+    For instance, the standard form of a QP is as follows:
+    \begin{subequations}
+    \begin{align}
+        \min_{\vx} \quad &\frac{1}{2}\vx^T \mP \vx + \vq^T \vx + r \\
+        \text{subject to} \quad &\mG \vx \preceq \vh \\
+        \quad &\mA \vx = \vb  
+    \end{align}
+    \end{subequations}
+    where, \[\mP \in \mathbb{R}^{n \times n}, \vq \in \mathbb{R}^{n}, r \in \mathbb{R}, \mG \in \mathbb{R}^{m \times n}, \vh \in \mathbb{R}^{m}, \mA \in \mathbb{R}^{p \times n}, \vb \in \mathbb{R}^{p}.\]
 
-We use random number generator to populate the entries of the matrices and the vectors (of parameters) in the above expression. However, there is one issue; any vector space $V$ is defined over a field $\mathcal{F}$. If we consider a vector space over the field of real numbers, $\mathbb{R}$, we will never be able to generate a data set that covers any fraction of the entire vector space as, $\forall\ x \in \mathbb{R}, -\infty \leq x \leq \infty$. 
+    We use random number generator to populate the entries of the matrices and the vectors (of parameters) in the above expression. However, there is one issue; any vector space $V$ is defined over a field $\mathcal{F}$. If we consider a vector space over the field of real numbers, $\mathbb{R}$, we will never be able to generate a data set that covers any fraction of the entire vector space as, $\forall\ x \in \mathbb{R}, -\infty \leq x \leq \infty$. 
 
-To address this issue, we propose a simple Complete Problem Normalization (CPN) that transforms the any original problem and limits the ``problem space'' meaning it ensures that all entries of the parameter matrices and the parameter vectors are limited to the interval [-1, 1] and that by a simple scaling factor, we can ``unnormalize'' the problem to get back the original problem and optimal solution from the normalized ones.
+    To address this issue, we propose a simple Complete Problem Normalization (CPN) that transforms the any original problem and limits the ``problem space'' meaning it ensures that all entries of the parameter matrices and the parameter vectors are limited to the interval [-1, 1] and that by a simple scaling factor, we can ``unnormalize'' the problem to get back the original problem and optimal solution from the normalized ones.
 
-\subsubsection{Complete Problem Normalization (CPN)}
-   Let $\Theta$ be defined as,
-   \[
-   \Theta = \max\{P_{max}, q_{max}, r, G_{max}, h_{max}, A_{max}, b_{max}\}.
-   \]
-   where each of the element of the set above is the maximum of absolute values of the entries of a matrix or a vector they belong to. For example,
-   \[
-   G_{max} \overset{\Delta}{=} \max\{|g_{ij}|| g_{ij} \text{is the element}\ i^{th} \text{row and } j^{th} \text{column}\}.
-   \]  
-   We then do the complete normalization as,
-   \begin{subequations}
-      \begin{align}
-         \tilde{\mP} &= \mP / \Theta, \tilde{\vq} = \vq / \Theta, \tilde{r} = r / \Theta \\
-         \tilde{\mG} &= \mG / \Theta, \tilde{\vh} = \vh / \Theta\\ 
-         \tilde{\mA} &= \mA / \Theta, \tilde{\vb} = \vb / \Theta
-      \end{align}
-   \end{subequations}
-   Thus, we see that a CPNed problem will be of the form: problem merely a positively scaled version and that the limits of the entries are as mentioned before. 
+    \subsubsection{Complete Problem Normalization (CPN)}
+    Let $\Theta$ be defined as,
+    \[
+    \Theta = \max\{P_{max}, q_{max}, r, G_{max}, h_{max}, A_{max}, b_{max}\}.
+    \]
+    where each of the element of the set above is the maximum of absolute values of the entries of a matrix or a vector they belong to. For example,
+    \[
+    G_{max} \overset{\Delta}{=} \max\{|g_{ij}|| g_{ij} \text{is the element}\ i^{th} \text{row and } j^{th} \text{column}\}.
+    \]  
+    We then do the complete normalization as,
+    \begin{subequations}
+        \begin{align}
+            \tilde{\mP} &= \mP / \Theta, \tilde{\vq} = \vq / \Theta, \tilde{r} = r / \Theta \\
+            \tilde{\mG} &= \mG / \Theta, \tilde{\vh} = \vh / \Theta\\ 
+            \tilde{\mA} &= \mA / \Theta, \tilde{\vb} = \vb / \Theta
+        \end{align}
+    \end{subequations}
+    Thus, we see that a CPNed problem will be of the form: problem merely a positively scaled version and that the limits of the entries are as mentioned before. 
    
    \subsubsection{Why is CPN required?}
    As mentioned above is not possible to generate a dataset that can cover any non-zero fraction of the problem space. Thus if we generate problem instances from the problem space mentioned above then we can solve any other optimization problem.  
